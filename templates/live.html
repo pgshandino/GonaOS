@@ -1,10 +1,343 @@
-<html>
-<head><title>Live Sensors</title></head>
-<body>
-<h2>Live Sensor Data</h2>
-<p>Temperature: {{data.temperature}}</p>
-<p>Humidity: {{data.humidity}}</p>
-<p>Rain Detected: {{data.rain_detected}}</p>
-<p>Soil Dry: {{data.soil_dry}}</p>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GonaOS Live Monitoring</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        body { font-family: 'Inter', sans-serif; }
+        .card-pulse { animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: .7; } }
+        .sensor-card { transition: all 0.3s ease; }
+        .sensor-card:hover { transform: translateY(-4px); }
+        .muted { opacity: 0.5; filter: grayscale(0.8); pointer-events: none; }
+    </style>
+</head>
+<body class="bg-slate-50 min-h-screen text-slate-900">
+
+    <nav class="bg-emerald-700 text-white shadow-lg p-4 sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto flex justify-between items-center">
+            <div class="flex items-center gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-emerald-300"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+                <h1 class="text-xl font-bold tracking-tight">GonaOS <span class="text-emerald-300 font-light">Monitor</span></h1>
+            </div>
+            <div class="flex items-center gap-4 text-sm font-medium">
+                <div class="flex items-center gap-2 px-3 py-1 bg-emerald-800 rounded-full border border-emerald-600">
+                    <span class="w-2 h-2 bg-emerald-400 rounded-full card-pulse"></span>
+                    Live Feed
+                </div>
+                <div id="timestamp" class="hidden md:block opacity-80 font-mono">--:--:--</div>
+            </div>
+        </div>
+    </nav>
+
+    <main class="max-w-7xl mx-auto p-4 md:p-8">
+        <header class="mb-8">
+            <h2 class="text-2xl font-bold text-slate-800">Field Overview</h2>
+            <p class="text-slate-500">Real-time climatic data for precise decision making.</p>
+        </header>
+
+        <!-- Sensor Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            
+            <!-- Temperature -->
+            <div id="temp-card" class="sensor-card bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+                <div class="flex justify-between items-start mb-4">
+                    <div class="p-3 bg-orange-50 text-orange-600 rounded-xl">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 4v10.54a4 4 0 1 1-4 0V4a2 2 0 0 1 4 0Z"/></svg>
+                    </div>
+                    <span id="temp-tag" class="text-[10px] font-bold px-2 py-0.5 rounded bg-emerald-100 text-emerald-700 uppercase tracking-wider">Active</span>
+                </div>
+                <h3 class="text-slate-500 text-sm font-medium">Temperature</h3>
+                <div class="flex items-baseline gap-1">
+                    <span id="temp-val" class="text-3xl font-bold text-slate-800">{{data.temperature}}</span>
+                    <span class="text-lg font-medium text-slate-500">°C</span>
+                </div>
+            </div>
+
+            <!-- Humidity -->
+            <div id="humidity-card" class="sensor-card bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+                <div class="flex justify-between items-start mb-4">
+                    <div class="p-3 bg-blue-50 text-blue-600 rounded-xl">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22a7 7 0 0 0 7-7c0-2-1-3.9-3-5.5s-3.5-4-4-6.5c-.5 2.5-2 4.9-4 6.5C6 11.1 5 13 5 15a7 7 0 0 0 7 7z"/></svg>
+                    </div>
+                    <span id="humidity-tag" class="text-[10px] font-bold px-2 py-0.5 rounded bg-emerald-100 text-emerald-700 uppercase tracking-wider">Active</span>
+                </div>
+                <h3 class="text-slate-500 text-sm font-medium">Humidity</h3>
+                <div class="flex items-baseline gap-1">
+                    <span id="humidity-val" class="text-3xl font-bold text-slate-800">{{data.humidity}}</span>
+                    <span class="text-lg font-medium text-slate-500">%</span>
+                </div>
+            </div>
+
+            <!-- Rain Status -->
+            <div id="rain-card" class="sensor-card bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+                <div class="flex justify-between items-start mb-4">
+                    <div id="rain-icon-bg" class="p-3 bg-slate-100 text-slate-600 rounded-xl">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 14.899A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.242"/><path d="M16 14v6"/><path d="M8 14v6"/><path d="M12 16v6"/></svg>
+                    </div>
+                    <span id="rain-tag" class="text-[10px] font-bold px-2 py-0.5 rounded bg-emerald-100 text-emerald-700 uppercase tracking-wider">Active</span>
+                </div>
+                <h3 class="text-slate-500 text-sm font-medium">Rain Detection</h3>
+                <div id="rain-status" class="text-xl font-bold text-slate-800">{{ "RAIN DETECTED" if data.rain_detected else "None" }}</div>
+            </div>
+
+            <!-- Soil Status -->
+            <div id="soil-card" class="sensor-card bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+                <div class="flex justify-between items-start mb-4">
+                    <div id="soil-icon-bg" class="p-3 bg-emerald-50 text-emerald-600 rounded-xl">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 11h10v4c0 .4-.1.8-.4 1.1l-4.2 4.2c-.2.2-.5.3-.7.3-.3 0-.5-.1-.7-.3l-4.2-4.2c-.3-.3-.4-.7-.4-1.1v-4Z"/><path d="M12 2v4"/><path d="M12 14v2"/><path d="M16 7.5 18 6"/><path d="M8 7.5 6 6"/></svg>
+                    </div>
+                    <span id="soil-tag" class="text-[10px] font-bold px-2 py-0.5 rounded bg-emerald-100 text-emerald-700 uppercase tracking-wider">Active</span>
+                </div>
+                <h3 class="text-slate-500 text-sm font-medium">Soil Condition</h3>
+                <div id="soil-status" class="text-xl font-bold text-emerald-600">{{ "Critically Dry" if data.soil_dry else "Optimal" }}</div>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div class="lg:col-span-2 bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+                <div class="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
+                    <h3 class="font-bold text-slate-800 flex items-center gap-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-emerald-600"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/></svg>
+                        GonaOS Decision Support
+                    </h3>
+                </div>
+                <div class="p-6">
+                    <div id="insight-box" class="flex gap-4 p-4 bg-emerald-50 rounded-xl border border-emerald-100 items-start">
+                        <div class="mt-1 text-emerald-600">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 8v4l3 3"/><circle cx="12" cy="12" r="10"/></svg>
+                        </div>
+                        <div>
+                            <p class="font-semibold text-emerald-900">System Recommendation</p>
+                            <p id="recommendation-text" class="text-emerald-800 text-sm mt-1">Ready for monitoring...</p>
+                        </div>
+                    </div>
+
+                    <div class="mt-6">
+                        <h4 class="text-xs font-bold text-slate-400 uppercase mb-4 tracking-widest">Threshold Activity Log (Client-Side)</h4>
+                        <div id="log-container" class="space-y-3">
+                            <!-- Logs will appear here -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- User Sensor Controls -->
+            <div class="bg-slate-800 rounded-2xl shadow-xl border border-slate-700 p-6 text-white">
+                <h3 class="font-bold mb-6 flex items-center gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-emerald-400"><path d="M12 20v-6M9 20v-10M15 20v-2M18 20V4M21 20V2M6 20v-4M3 20v-2"/></svg>
+                    Sensor Master Switches
+                </h3>
+                <div class="space-y-4">
+                    <div class="flex items-center justify-between p-3 bg-slate-700/50 rounded-xl border border-slate-700">
+                        <span class="text-sm">Atmosphere Sensors</span>
+                        <button id="toggle-atmo" onclick="toggleSensorGroup('atmo')" class="px-3 py-1 bg-emerald-600 rounded-lg text-[10px] font-bold uppercase transition-all">ON</button>
+                    </div>
+                    <div class="flex items-center justify-between p-3 bg-slate-700/50 rounded-xl border border-slate-700">
+                        <span class="text-sm">Weather (Rain) Sensor</span>
+                        <button id="toggle-weather" onclick="toggleSensorGroup('weather')" class="px-3 py-1 bg-emerald-600 rounded-lg text-[10px] font-bold uppercase transition-all">ON</button>
+                    </div>
+                    <div class="flex items-center justify-between p-3 bg-slate-700/50 rounded-xl border border-slate-700">
+                        <span class="text-sm">Soil Health Sensor</span>
+                        <button id="toggle-soil-sw" onclick="toggleSensorGroup('soil')" class="px-3 py-1 bg-emerald-600 rounded-lg text-[10px] font-bold uppercase transition-all">ON</button>
+                    </div>
+                </div>
+                
+                <div class="mt-12 p-4 bg-slate-900/50 rounded-xl border border-slate-700/50">
+                    <h4 class="text-xs font-bold text-slate-500 uppercase mb-2">Device Info</h4>
+                    <div class="grid grid-cols-2 gap-2 text-xs mb-4">
+                        <div class="text-slate-400">Node ID:</div>
+                        <div class="text-slate-200">GONA-L1-442</div>
+                        <div class="text-slate-400">Battery:</div>
+                        <div class="text-emerald-400 font-bold">94%</div>
+                        <div class="text-slate-400">Signal:</div>
+                        <div class="text-slate-200">Excellent</div>
+                    </div>
+                    <a href="{{url_for('dashboard')}}" class="block w-full text-center py-2 px-3 bg-emerald-600 hover:bg-emerald-500 rounded-lg text-xs font-bold transition-colors">
+                        Go to Analytics Dashboard
+                    </a>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        // Initial Flask Values
+        let serverData = {
+            temperature: parseFloat("{{data.temperature}}") || 24.5,
+            humidity: parseInt("{{data.humidity}}") || 60,
+            rain_detected: {{ 'true' if data.rain_detected else 'false' }},
+            soil_dry: {{ 'true' if data.soil_dry else 'false' }}
+        };
+
+        // UI State (User overrides)
+        let sensorStates = {
+            atmo: true,
+            weather: true,
+            soil: true
+        };
+
+        // Threshold tracking (to prevent log spamming)
+        let thresholdsReached = {
+            high_temp: false,
+            low_humidity: false
+        };
+
+        function updateUI() {
+            // Update Atmosphere (Only if active)
+            if (sensorStates.atmo) {
+                document.getElementById('temp-val').innerText = serverData.temperature.toFixed(1);
+                document.getElementById('humidity-val').innerText = serverData.humidity;
+                document.getElementById('temp-card').classList.remove('muted');
+                document.getElementById('humidity-card').classList.remove('muted');
+                document.getElementById('temp-tag').innerText = "Active";
+                document.getElementById('temp-tag').className = "text-[10px] font-bold px-2 py-0.5 rounded bg-emerald-100 text-emerald-700 uppercase tracking-wider";
+                document.getElementById('humidity-tag').innerText = "Active";
+                document.getElementById('humidity-tag').className = "text-[10px] font-bold px-2 py-0.5 rounded bg-emerald-100 text-emerald-700 uppercase tracking-wider";
+            } else {
+                document.getElementById('temp-card').classList.add('muted');
+                document.getElementById('humidity-card').classList.add('muted');
+                document.getElementById('temp-tag').innerText = "Disabled";
+                document.getElementById('temp-tag').className = "text-[10px] font-bold px-2 py-0.5 rounded bg-slate-200 text-slate-500 uppercase tracking-wider";
+                document.getElementById('humidity-tag').innerText = "Disabled";
+                document.getElementById('humidity-tag').className = "text-[10px] font-bold px-2 py-0.5 rounded bg-slate-200 text-slate-500 uppercase tracking-wider";
+            }
+
+            // Update Weather (Only if active)
+            const rainStatus = document.getElementById('rain-status');
+            const rainCard = document.getElementById('rain-card');
+            const rainTag = document.getElementById('rain-tag');
+
+            if (sensorStates.weather) {
+                rainCard.classList.remove('muted');
+                rainTag.innerText = "Active";
+                rainTag.className = "text-[10px] font-bold px-2 py-0.5 rounded bg-emerald-100 text-emerald-700 uppercase tracking-wider";
+                if (serverData.rain_detected) {
+                    rainStatus.innerText = "RAIN DETECTED";
+                    rainStatus.className = "text-xl font-bold text-blue-600";
+                    rainCard.classList.add('bg-blue-50', 'border-blue-200');
+                } else {
+                    rainStatus.innerText = "None";
+                    rainStatus.className = "text-xl font-bold text-slate-800";
+                    rainCard.classList.remove('bg-blue-50', 'border-blue-200');
+                }
+            } else {
+                rainCard.classList.add('muted');
+                rainTag.innerText = "Disabled";
+                rainTag.className = "text-[10px] font-bold px-2 py-0.5 rounded bg-slate-200 text-slate-500 uppercase tracking-wider";
+            }
+
+            // Update Soil (Only if active)
+            const soilStatus = document.getElementById('soil-status');
+            const soilCard = document.getElementById('soil-card');
+            const soilTag = document.getElementById('soil-tag');
+
+            if (sensorStates.soil) {
+                soilCard.classList.remove('muted');
+                soilTag.innerText = "Active";
+                soilTag.className = "text-[10px] font-bold px-2 py-0.5 rounded bg-emerald-100 text-emerald-700 uppercase tracking-wider";
+                if (serverData.soil_dry) {
+                    soilStatus.innerText = "Critically Dry";
+                    soilStatus.className = "text-xl font-bold text-rose-600";
+                    soilCard.classList.add('bg-rose-50', 'border-rose-200');
+                } else {
+                    soilStatus.innerText = "Optimal";
+                    soilStatus.className = "text-xl font-bold text-emerald-600";
+                    soilCard.classList.remove('bg-rose-50', 'border-rose-200');
+                }
+            } else {
+                soilCard.classList.add('muted');
+                soilTag.innerText = "Disabled";
+                soilTag.className = "text-[10px] font-bold px-2 py-0.5 rounded bg-slate-200 text-slate-500 uppercase tracking-wider";
+            }
+
+            checkThresholds();
+            updateRecommendation();
+        }
+
+        function toggleSensorGroup(group) {
+            sensorStates[group] = !sensorStates[group];
+            const btn = {
+                atmo: document.getElementById('toggle-atmo'),
+                weather: document.getElementById('toggle-weather'),
+                soil: document.getElementById('toggle-soil-sw')
+            }[group];
+            
+            if (sensorStates[group]) {
+                btn.innerText = "ON";
+                btn.className = "px-3 py-1 bg-emerald-600 rounded-lg text-[10px] font-bold uppercase transition-all";
+                addLog(`User enabled ${group} sensor group.`);
+            } else {
+                btn.innerText = "OFF";
+                btn.className = "px-3 py-1 bg-slate-600 rounded-lg text-[10px] font-bold uppercase transition-all";
+                addLog(`User disabled ${group} sensor group.`);
+            }
+            updateUI();
+        }
+
+        function checkThresholds() {
+            // Client-side threshold logic
+            if (serverData.temperature > 30 && !thresholdsReached.high_temp) {
+                addLog(`⚠️ HIGH TEMP: ${serverData.temperature.toFixed(1)}°C exceeded 30°C limit.`);
+                thresholdsReached.high_temp = true;
+            } else if (serverData.temperature <= 30) {
+                thresholdsReached.high_temp = false;
+            }
+
+            if (serverData.humidity < 40 && !thresholdsReached.low_humidity) {
+                addLog(`⚠️ LOW HUMIDITY: ${serverData.humidity}% dropped below 40% threshold.`);
+                thresholdsReached.low_humidity = true;
+            } else if (serverData.humidity >= 40) {
+                thresholdsReached.low_humidity = false;
+            }
+        }
+
+        function updateRecommendation() {
+            const recommendationText = document.getElementById('recommendation-text');
+            const insightBox = document.getElementById('insight-box');
+
+            if (serverData.soil_dry && !serverData.rain_detected && sensorStates.soil) {
+                recommendationText.innerText = "Critical Soil Dryness detected. Irrigation required.";
+                insightBox.className = "flex gap-4 p-4 bg-rose-50 rounded-xl border border-rose-100 items-start";
+            } else if (serverData.rain_detected && sensorStates.weather) {
+                recommendationText.innerText = "Rain detected. Suspending automated irrigation cycles.";
+                insightBox.className = "flex gap-4 p-4 bg-blue-50 rounded-xl border border-blue-100 items-start";
+            } else {
+                recommendationText.innerText = "All monitored systems are within normal operating parameters.";
+                insightBox.className = "flex gap-4 p-4 bg-emerald-50 rounded-xl border border-emerald-100 items-start";
+            }
+        }
+
+        function addLog(msg) {
+            const container = document.getElementById('log-container');
+            const now = new Date();
+            const timeStr = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+            const div = document.createElement('div');
+            div.className = "flex justify-between items-center text-sm p-2 rounded-lg bg-white border border-slate-100 shadow-sm animate-in fade-in slide-in-from-left-2 duration-300";
+            div.innerHTML = `<span class="text-slate-700 font-medium">${msg}</span><span class="text-slate-400 text-[10px] font-mono">${timeStr}</span>`;
+            container.prepend(div);
+            if (container.children.length > 5) container.removeChild(container.lastChild);
+        }
+
+        // Live Mocking Logic (Fluctuates the "Server Data")
+        setInterval(() => {
+            const now = new Date();
+            document.getElementById('timestamp').innerText = now.toLocaleTimeString();
+            
+            // Simulating server data changing in background
+            serverData.temperature += (Math.random() - 0.5) * 0.2;
+            serverData.humidity = Math.max(20, Math.min(100, serverData.humidity + (Math.random() > 0.5 ? 1 : -1)));
+            
+            updateUI();
+        }, 1500);
+
+        window.onload = () => {
+            addLog("System initialized. Monitoring Flask feed.");
+            updateUI();
+        };
+    </script>
 </body>
 </html>

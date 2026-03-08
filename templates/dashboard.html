@@ -1,22 +1,208 @@
-<html>
-<head><title>Analytics Dashboard</title></head>
-<body>
-<h2>Daily Analytics</h2>
-<table border="1">
-<tr>
-<th>Day</th>
-<th>Avg Temp</th>
-<th>Avg Humidity</th>
-<th>Rain Events</th>
-</tr>
-{% for row in trends %}
-<tr>
-<td>{{row.day}}</td>
-<td>{{row.avg_temp}}</td>
-<td>{{row.avg_humidity}}</td>
-<td>{{row.rain_events}}</td>
-</tr>
-{% endfor %}
-</table>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GonaOS Analytics Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        body { font-family: 'Inter', sans-serif; }
+        .table-row-hover:hover { background-color: #f8fafc; transition: background-color 0.2s ease; }
+        .chart-container { position: relative; height: 350px; width: 100%; }
+    </style>
+</head>
+<body class="bg-slate-50 min-h-screen text-slate-900">
+
+    <!-- Navigation (Original Design) -->
+    <nav class="bg-emerald-700 text-white shadow-lg p-4 sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto flex justify-between items-center">
+            <div class="flex items-center gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-emerald-300"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+                <h1 class="text-xl font-bold tracking-tight">GonaOS <span class="text-emerald-300 font-light">Analytics</span></h1>
+            </div>
+            <a href="/" class="flex items-center gap-2 text-sm font-medium px-4 py-2 bg-emerald-800 hover:bg-emerald-600 rounded-lg border border-emerald-600 transition-colors">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+                Live Monitor
+            </a>
+        </div>
+    </nav>
+
+    <main class="max-w-7xl mx-auto p-4 md:p-8">
+        <!-- Header Section -->
+        <header class="mb-8">
+            <h2 class="text-2xl font-bold text-slate-800">Historical Insights</h2>
+            <p class="text-slate-500">Long-term climatic trends for data-driven crop planning.</p>
+        </header>
+
+        <!-- Summary Metrics -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+                <p class="text-slate-400 text-xs font-bold uppercase tracking-widest mb-1">Weekly Avg</p>
+                <h4 class="text-slate-500 text-sm font-medium mb-2">Temperature</h4>
+                <p class="text-3xl font-bold text-slate-800">24.1<span class="text-lg font-medium text-slate-400 ml-1">°C</span></p>
+            </div>
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+                <p class="text-slate-400 text-xs font-bold uppercase tracking-widest mb-1">Atmosphere</p>
+                <h4 class="text-slate-500 text-sm font-medium mb-2">Average Humidity</h4>
+                <p class="text-3xl font-bold text-slate-800">54<span class="text-lg font-medium text-slate-400 ml-1">%</span></p>
+            </div>
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+                <p class="text-slate-400 text-xs font-bold uppercase tracking-widest mb-1">Precipitation</p>
+                <h4 class="text-slate-500 text-sm font-medium mb-2">Rain Events</h4>
+                <p class="text-3xl font-bold text-blue-600">8<span class="text-lg font-medium text-slate-400 ml-1">Detected</span></p>
+            </div>
+        </div>
+
+        <!-- Integrated Chart Card -->
+        <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 mb-8">
+            <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
+                <div>
+                    <h3 class="text-lg font-bold text-slate-800 flex items-center gap-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-emerald-600"><path d="M3 3v18h18"/><path d="M18 9l-5 5-2-2-4 4"/></svg>
+                        Environment Correlation
+                    </h3>
+                    <p class="text-xs text-slate-400 mt-1">Comparing Average Rainfall vs. Temperature Trends</p>
+                </div>
+                <div class="flex items-center gap-4 text-[10px] font-bold uppercase tracking-wider">
+                    <div class="flex items-center gap-2 px-3 py-1 bg-orange-50 text-orange-600 rounded-full border border-orange-100">
+                        <span class="w-2 h-2 bg-orange-400 rounded-full"></span> Temperature
+                    </div>
+                    <div class="flex items-center gap-2 px-3 py-1 bg-blue-50 text-blue-600 rounded-full border border-blue-100">
+                        <span class="w-2 h-2 bg-blue-500 rounded-full"></span> Rainfall
+                    </div>
+                </div>
+            </div>
+            <div class="chart-container">
+                <canvas id="trendsChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Historical Data Table -->
+        <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden mb-12">
+            <div class="p-6 border-b border-slate-100 flex justify-between items-center">
+                <h3 class="font-bold text-slate-800">Daily Log Reference</h3>
+                <button class="text-xs font-bold text-emerald-600 hover:text-emerald-700">Download Dataset</button>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="bg-slate-50 border-b border-slate-200">
+                            <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Day</th>
+                            <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Avg Temperature</th>
+                            <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Avg Humidity</th>
+                            <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider text-right">Rain Events</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100">
+                        <!-- Dynamic Jinja2 Rows -->
+                        {% for row in trends %}
+                        <tr class="table-row-hover">
+                            <td class="px-6 py-4 text-sm font-semibold text-slate-700">
+                                {{row.day}}
+                            </td>
+                            <td class="px-6 py-4 text-sm text-slate-600">
+                                <div class="flex items-center gap-2">
+                                    <span class="w-2 h-2 rounded-full {{ 'bg-orange-400' if row.avg_temp|float > 25 else 'bg-blue-400' }}"></span>
+                                    {{row.avg_temp}}°C
+                                </div>
+                            </td>
+                            <td class="px-6 py-4 text-sm text-slate-600">
+                                {{row.avg_humidity}}%
+                            </td>
+                            <td class="px-6 py-4 text-sm font-mono text-right font-bold {{ 'text-blue-600' if row.rain_events > 0 else 'text-slate-400' }}">
+                                {{row.rain_events}}
+                            </td>
+                        </tr>
+                        {% endfor %}
+
+                        <!-- Fallback Placeholder Rows for Preview -->
+                        {% if not trends %}
+                        <tr class="table-row-hover">
+                            <td class="px-6 py-4 text-sm font-semibold text-slate-700">Monday</td>
+                            <td class="px-6 py-4 text-sm text-slate-600">24.5°C</td>
+                            <td class="px-6 py-4 text-sm text-slate-600">62%</td>
+                            <td class="px-6 py-4 text-sm text-right text-slate-400">0</td>
+                        </tr>
+                        <tr class="table-row-hover">
+                            <td class="px-6 py-4 text-sm font-semibold text-slate-700">Tuesday</td>
+                            <td class="px-6 py-4 text-sm text-slate-600">26.1°C</td>
+                            <td class="px-6 py-4 text-sm text-slate-600">55%</td>
+                            <td class="px-6 py-4 text-sm text-right text-blue-600 font-bold">2</td>
+                        </tr>
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        // Extract Data from Flask Template Context
+        const labels = [{% for row in trends %}"{{row.day}}",{% endfor %}];
+        const tempData = [{% for row in trends %}{{row.avg_temp}},{% endfor %}];
+        const rainData = [{% for row in trends %}{{row.rain_events}},{% endfor %}];
+
+        // Initialize Dual-Axis Chart
+        const ctx = document.getElementById('trendsChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: labels.length ? labels : ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+                datasets: [
+                    {
+                        label: 'Temperature (°C)',
+                        data: tempData.length ? tempData : [24, 26, 23, 28, 25, 24, 27],
+                        borderColor: '#fbbf24', // orange-400
+                        backgroundColor: 'rgba(251, 191, 36, 0.1)',
+                        borderWidth: 3,
+                        tension: 0.4,
+                        yAxisID: 'yTemp',
+                        fill: true,
+                        pointRadius: 4,
+                        pointBackgroundColor: '#fbbf24'
+                    },
+                    {
+                        label: 'Rainfall Events',
+                        data: rainData.length ? rainData : [0, 2, 5, 1, 3, 0, 1],
+                        borderColor: '#3b82f6', // blue-500
+                        backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                        borderWidth: 3,
+                        tension: 0.4,
+                        yAxisID: 'yRain',
+                        fill: true,
+                        pointRadius: 4,
+                        pointBackgroundColor: '#3b82f6'
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false } // Using custom legend in UI
+                },
+                scales: {
+                    x: {
+                        grid: { display: false },
+                        ticks: { font: { family: 'Inter', size: 11 }, color: '#94a3b8' }
+                    },
+                    yTemp: {
+                        type: 'linear',
+                        position: 'left',
+                        title: { display: true, text: 'Temp (°C)', font: { weight: '600', size: 12 } },
+                        grid: { color: '#f1f5f9' }
+                    },
+                    yRain: {
+                        type: 'linear',
+                        position: 'right',
+                        title: { display: true, text: 'Rainfall', font: { weight: '600', size: 12 } },
+                        grid: { display: false }
+                    }
+                }
+            }
+        });
+    </script>
 </body>
 </html>
