@@ -1,0 +1,22 @@
+<html>
+<head><title>Analytics Dashboard</title></head>
+<body>
+<h2>Daily Analytics</h2>
+<table border="1">
+<tr>
+<th>Day</th>
+<th>Avg Temp</th>
+<th>Avg Humidity</th>
+<th>Rain Events</th>
+</tr>
+{% for row in trends %}
+<tr>
+<td>{{row.day}}</td>
+<td>{{row.avg_temp}}</td>
+<td>{{row.avg_humidity}}</td>
+<td>{{row.rain_events}}</td>
+</tr>
+{% endfor %}
+</table>
+</body>
+</html>
